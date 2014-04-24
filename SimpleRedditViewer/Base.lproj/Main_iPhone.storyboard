@@ -12,10 +12,14 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                        <searchBar key="tableHeaderView" contentMode="redraw" id="TaR-5A-z6Y">
+                        <searchBar key="tableHeaderView" contentMode="redraw" placeholder="Enter Subreddit Name" id="TaR-5A-z6Y">
                             <rect key="frame" x="0.0" y="64" width="320" height="44"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                             <textInputTraits key="textInputTraits"/>
+                            <scopeButtonTitles>
+                                <string>Title</string>
+                                <string>Title</string>
+                            </scopeButtonTitles>
                             <connections>
                                 <outlet property="delegate" destination="EFm-he-p7d" id="Knv-pV-igr"/>
                             </connections>
