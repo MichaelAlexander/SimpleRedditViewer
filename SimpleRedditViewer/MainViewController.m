@@ -8,6 +8,8 @@
 
 #import "MainViewController.h"
 #import "RedditItemViewController.h"
+#import "RedditCell.h"
+#import "AFNetworking.h"
 
 @interface MainViewController ()
 
@@ -15,6 +17,7 @@
 @property (nonatomic, strong) NSURLSession *session;
 @property (nonatomic, strong) UIView *footerView;
 @property (nonatomic, strong) NSString *currentSubRedditString;
+@property (nonatomic, strong) RedditCell *prototypeCell;
 - (void)reloadTableWithSubReddit:(NSString *)subRedditString;
 - (NSURL *)getUrlWithSubRedditName:(NSString *)subRedditName;
 - (IBAction)loadMoreButtonPressed:(id)sender;
@@ -30,6 +33,15 @@
         self.session = [NSURLSession sessionWithConfiguration:configuration];
     }
     return _session;
+}
+
+- (RedditCell *)prototypeCell
+{
+    if (!_prototypeCell) {
+        _prototypeCell = [self.tableView dequeueReusableCellWithIdentifier:@"RedditCell"];//NSStringFromClass([RedditCell class])];
+
+    }
+    return _prototypeCell;
 }
 
 - (NSMutableArray *)redditItems
@@ -158,20 +170,41 @@
     return [self.redditItems count];
 }
 
+//- (CGFloat)tableView:(UITableView *)tableView estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath
+
+/*
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    NSDictionary *cellDictionary = [self.redditItems objectAtIndex:[indexPath row]];
+    NSString *titleString = [cellDictionary valueForKeyPath:@"title"];
+    
+    self.prototypeCell.title.text = titleString;
+    [self.prototypeCell layoutIfNeeded];
+    
+    CGSize size = [self.prototypeCell systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+    NSLog(@"Height: %f", size.height);
+    return size.height+1;
+}*/
+
+
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSString *reuseIdentifier = @"RedditItemCell";
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:reuseIdentifier forIndexPath:indexPath];
+    NSString *reuseIdentifier =  @"RedditCell";// NSStringFromClass([RedditCell class]);
+    RedditCell *cell = [tableView dequeueReusableCellWithIdentifier:reuseIdentifier forIndexPath:indexPath];
     
-    if (!cell) {
+    /*if (!cell) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:reuseIdentifier];
-    }
+    }*/
     
     cell.tag = [indexPath row];
     NSDictionary *cellDictionary = [self.redditItems objectAtIndex:[indexPath row]];
     
+    /*if ([indexPath row] == 1) {
+        NSLog(@"%@", cellDictionary);
+    }*/
+    
     if (cellDictionary) {
-        cell.imageView.image = nil;
+        cell.thumbView.image = nil;
         dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0ul);
         dispatch_async(queue, ^(void) {
             NSData *imageData = [NSData dataWithContentsOfURL:[NSURL URLWithString:cellDictionary[@"thumbnail"]]];
@@ -180,17 +213,47 @@
                                  if (thumbnail) {
                                      dispatch_async(dispatch_get_main_queue(), ^{
                                          if (cell.tag == indexPath.row) {
-                                             cell.imageView.image = thumbnail;
+                                             cell.thumbView.image = thumbnail;
                                              [cell setNeedsLayout];
                                          }
                                      });
                                  }
                                  });
-        
-        cell.textLabel.text = [cellDictionary valueForKey:@"title"];
+        [cell.title setNumberOfLines:0];
+        cell.title.text = [cellDictionary valueForKey:@"title"];
+        cell.subLabel.text = [cellDictionary valueForKeyPath:@"subreddit"];
+        NSString *commentString = [NSString stringWithFormat:@"%@", [cellDictionary valueForKeyPath:@"num_comments"]];
+        cell.commentsButton.titleLabel.text = commentString;
+        //NSLog(@"Title: %@ \n Comments: %@", [cellDictionary valueForKeyPath:@"title"], commentString);
     }
    
     return cell;
+}
+
+#pragma mark - UITableViewDelegate
+
+- (CGFloat)tableView:(UITableView *)tableView estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return UITableViewAutomaticDimension;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return UITableViewAutomaticDimension;
+    
+    
+    /*
+    //self.prototypeCell.bounds = CGRectMake(0, 0, CGRectGetWidth(self.tableView.bounds), CGRectGetHeight(self.prototypeCell.bounds));
+    
+    [self configureCell:self.prototypeCell forRowAtIndexPath:indexPath];
+    
+    // (8)
+    [self.prototypeCell updateConstraintsIfNeeded];
+    [self.prototypeCell layoutIfNeeded];
+    
+    // (9)
+    return [self.prototypeCell.contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize].height;*/
+    
 }
 
 
