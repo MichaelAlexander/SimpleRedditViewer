@@ -20,6 +20,7 @@
 @property (nonatomic, strong) RedditCell *prototypeCell;
 - (void)reloadTableWithSubReddit:(NSString *)subRedditString;
 - (NSURL *)getUrlWithSubRedditName:(NSString *)subRedditName;
+- (IBAction)didSelectCellOrCellButton:(id)sender;
 - (IBAction)loadMoreButtonPressed:(id)sender;
 
 @end
@@ -80,37 +81,43 @@
 {
     self.currentSubRedditString = subRedditString;
     NSURL *currentSubReddit = [self getUrlWithSubRedditName:subRedditString];
+    NSURLRequest *request = [NSURLRequest requestWithURL:currentSubReddit];
     
-    NSURLSessionTask  *task = [self.session dataTaskWithURL:currentSubReddit completionHandler:
-                               ^(NSData *data, NSURLResponse *response, NSError *error){
-                                   [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
-                                   
-                                   if (error)
-                                   {
-                                       NSLog(@"Error! %@", error);
-                                       return;
-                                   }
-                                   
-                                   NSError *jsonError;
-                                   NSDictionary *jsonDictionary = [NSJSONSerialization JSONObjectWithData:data options: NSJSONReadingMutableContainers error:&jsonError];
-                                   NSDictionary *children = [jsonDictionary valueForKeyPath:@"data.children"];
-                                   
-                                   NSMutableArray *redditObjects = [[NSMutableArray alloc] init];
-                                   
-                                   for (NSDictionary *childDictionary in children) {
-                                       [redditObjects addObject:[childDictionary valueForKey:@"data"]];
-                                   }
-                                   
-                                   //NSDictionary *testDictionary = [redditObjects objectAtIndex:24];
-                                   //NSLog(@"%@", testDictionary);
-                                   
-                                   dispatch_async(dispatch_get_main_queue(), ^{
-                                       self.redditItems = redditObjects;
-                                       [self.tableView reloadData];
-                                   });
-                                   [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-                               }];
-    [task resume];
+    AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
+    operation.responseSerializer = [AFJSONResponseSerializer serializer];
+    
+    [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+        
+        NSDictionary *children = [responseObject valueForKeyPath:@"data.children"];
+        
+        NSMutableArray *redditObjects = [[NSMutableArray alloc] init];
+        
+        for (NSDictionary *childDictionary in children) {
+            [redditObjects addObject:[childDictionary valueForKey:@"data"]];
+        }
+        self.redditItems = redditObjects;
+        /*
+        if ([self.redditItems count] > 0)
+        {
+            NSLog(@"%@", [self.redditItems objectAtIndex:0]);
+        }*/
+        
+        [self.tableView reloadData];
+        
+        
+        [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+    
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Error Retrieving Reddit Data"
+                                                            message:[error localizedDescription]
+                                                           delegate:nil
+                                                  cancelButtonTitle:@"Ok"
+                                                  otherButtonTitles:nil];
+        [alertView show];
+    }];
+    
+    [operation start];
 }
 
 - (NSURL *)getUrlWithSubRedditName:(NSString *)subRedditName
@@ -127,34 +134,38 @@
         NSString *lastItemName = [[self.redditItems objectAtIndex:lastItem] valueForKey:@"name"];
         NSString *urlString = [NSString stringWithFormat:@"http://www.reddit.com/r/%@/.json?limit=25&after=%@", self.currentSubRedditString, lastItemName];
         NSURL *currentSubReddit = [NSURL URLWithString:urlString];
+        NSURLRequest *request = [NSURLRequest requestWithURL:currentSubReddit];
         
-        NSURLSessionTask  *task = [self.session dataTaskWithURL:currentSubReddit completionHandler:
-                                   ^(NSData *data, NSURLResponse *response, NSError *error){
-                                       [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
-                                       
-                                       if (error)
-                                       {
-                                           NSLog(@"Error! %@", error);
-                                           return;
-                                       }
-                                       
-                                       NSError *jsonError;
-                                       NSDictionary *jsonDictionary = [NSJSONSerialization JSONObjectWithData:data options: NSJSONReadingMutableContainers error:&jsonError];
-                                       NSDictionary *children = [jsonDictionary valueForKeyPath:@"data.children"];
-                                       
-                                       NSMutableArray *redditObjects = [[NSMutableArray alloc] init];
-                                       
-                                       for (NSDictionary *childDictionary in children) {
-                                           [redditObjects addObject:[childDictionary valueForKey:@"data"]];
-                                       }
-                                       
-                                       dispatch_async(dispatch_get_main_queue(), ^{
-                                           [self.redditItems addObjectsFromArray:redditObjects];
-                                           [self.tableView reloadData];
-                                       });
-                                       [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
-                                   }];
-        [task resume];
+        AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
+        operation.responseSerializer = [AFJSONResponseSerializer serializer];
+        
+        [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+            [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+            
+            NSDictionary *children = [responseObject valueForKeyPath:@"data.children"];
+            
+            NSMutableArray *redditObjects = [[NSMutableArray alloc] init];
+            
+            for (NSDictionary *childDictionary in children) {
+                [redditObjects addObject:[childDictionary valueForKey:@"data"]];
+            }
+            [self.redditItems addObjectsFromArray:redditObjects];
+            [self.tableView reloadData];
+            
+            
+            [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+        } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+            
+            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Error Retrieving Reddit Data"
+                                                                message:[error localizedDescription]
+                                                               delegate:nil
+                                                      cancelButtonTitle:@"Ok"
+                                                      otherButtonTitles:nil];
+            [alertView show];
+        }];
+        
+        [operation start];
+
     }
 }
 
@@ -170,38 +181,15 @@
     return [self.redditItems count];
 }
 
-//- (CGFloat)tableView:(UITableView *)tableView estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath
-
-/*
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    NSDictionary *cellDictionary = [self.redditItems objectAtIndex:[indexPath row]];
-    NSString *titleString = [cellDictionary valueForKeyPath:@"title"];
-    
-    self.prototypeCell.title.text = titleString;
-    [self.prototypeCell layoutIfNeeded];
-    
-    CGSize size = [self.prototypeCell systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
-    NSLog(@"Height: %f", size.height);
-    return size.height+1;
-}*/
 
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSString *reuseIdentifier =  @"RedditCell";// NSStringFromClass([RedditCell class]);
+    NSString *reuseIdentifier =  @"RedditCell";
     RedditCell *cell = [tableView dequeueReusableCellWithIdentifier:reuseIdentifier forIndexPath:indexPath];
-    
-    /*if (!cell) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:reuseIdentifier];
-    }*/
     
     cell.tag = [indexPath row];
     NSDictionary *cellDictionary = [self.redditItems objectAtIndex:[indexPath row]];
-    
-    /*if ([indexPath row] == 1) {
-        NSLog(@"%@", cellDictionary);
-    }*/
     
     if (cellDictionary) {
         cell.thumbView.image = nil;
@@ -223,8 +211,7 @@
         cell.title.text = [cellDictionary valueForKey:@"title"];
         cell.subLabel.text = [cellDictionary valueForKeyPath:@"subreddit"];
         NSString *commentString = [NSString stringWithFormat:@"%@", [cellDictionary valueForKeyPath:@"num_comments"]];
-        cell.commentsButton.titleLabel.text = commentString;
-        //NSLog(@"Title: %@ \n Comments: %@", [cellDictionary valueForKeyPath:@"title"], commentString);
+        [cell.commentsButton setTitle:commentString forState:UIControlStateNormal];
     }
    
     return cell;
@@ -240,32 +227,37 @@
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     return UITableViewAutomaticDimension;
-    
-    
-    /*
-    //self.prototypeCell.bounds = CGRectMake(0, 0, CGRectGetWidth(self.tableView.bounds), CGRectGetHeight(self.prototypeCell.bounds));
-    
-    [self configureCell:self.prototypeCell forRowAtIndexPath:indexPath];
-    
-    // (8)
-    [self.prototypeCell updateConstraintsIfNeeded];
-    [self.prototypeCell layoutIfNeeded];
-    
-    // (9)
-    return [self.prototypeCell.contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize].height;*/
-    
 }
-
-
 
 #pragma mark - Navigation
 
+- (IBAction)didSelectCellOrCellButton:(id)sender
+{
+    
+}
+
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
+    
     RedditItemViewController *redditItemViewController = [segue destinationViewController];
-    NSIndexPath *cellIndex = [self.tableView indexPathForCell:(UITableViewCell *)sender];
-    NSDictionary *itemDictionary = [self.redditItems objectAtIndex:[cellIndex row]];
-    NSURL *itemURL = [NSURL URLWithString:[itemDictionary valueForKey:@"url"]];
+    
+    NSIndexPath *cellIndex;
+    NSDictionary *itemDictionary;
+    NSURL *itemURL;
+    
+    //If the cell is tapped go to the link, otherwise go to the comments URL
+    if ([[segue identifier] isEqualToString:@"cellTap"])
+    {
+        cellIndex = [self.tableView indexPathForCell:(UITableViewCell *)sender];
+        itemDictionary = [self.redditItems objectAtIndex:[cellIndex row]];
+        itemURL = [NSURL URLWithString:[itemDictionary valueForKey:@"url"]];
+    }else{
+        RedditCell *cellForButton = (RedditCell *)[[sender superview] superview];
+        cellIndex = [self.tableView indexPathForCell:cellForButton];
+        itemDictionary = [self.redditItems objectAtIndex:[cellIndex row]];
+        NSString *commentURLString = [NSString stringWithFormat:@"http://www.reddit.com%@", [itemDictionary valueForKey:@"permalink"]];
+        itemURL = [NSURL URLWithString:commentURLString];
+    }
     [redditItemViewController setWebViewURL:itemURL];
 }
 

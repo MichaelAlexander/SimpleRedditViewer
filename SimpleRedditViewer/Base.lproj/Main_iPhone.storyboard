@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6751" systemVersion="13F1066" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="TzP-Jc-IHK">
     <dependencies>
-        <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6736"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
@@ -51,6 +50,12 @@
                                             <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalCompressionResistancePriority="751" text="Label" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8Th-8F-p7u">
+                                            <rect key="frame" x="44" y="2" width="232" height="30"/>
+                                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                            <nil key="highlightedColor"/>
+                                        </label>
                                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hwI-xv-bME">
                                             <rect key="frame" x="278" y="2" width="40" height="40"/>
                                             <constraints>
@@ -58,16 +63,13 @@
                                                 <constraint firstAttribute="height" constant="40" id="Ygz-M3-d0l"/>
                                             </constraints>
                                             <fontDescription key="fontDescription" type="system" pointSize="10"/>
-                                            <state key="normal" title="Button">
+                                            <state key="normal" title="button">
                                                 <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                             </state>
+                                            <connections>
+                                                <segue destination="Bye-0k-8As" kind="push" identifier="commentButtonTap" id="0rs-s1-fDZ"/>
+                                            </connections>
                                         </button>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalCompressionResistancePriority="751" text="Label" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8Th-8F-p7u">
-                                            <rect key="frame" x="44" y="2" width="232" height="30"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
                                     </subviews>
                                     <constraints>
                                         <constraint firstItem="MSe-v8-jti" firstAttribute="top" secondItem="hZa-ld-g0q" secondAttribute="topMargin" constant="-6" id="2U2-11-8dt"/>
@@ -88,7 +90,7 @@
                                     <outlet property="subLabel" destination="eHR-Zi-IlY" id="fIn-0X-nvT"/>
                                     <outlet property="thumbView" destination="MSe-v8-jti" id="nPy-I6-SbB"/>
                                     <outlet property="title" destination="8Th-8F-p7u" id="Bk5-3W-ODy"/>
-                                    <segue destination="Bye-0k-8As" kind="push" id="EFi-dP-dmW"/>
+                                    <segue destination="Bye-0k-8As" kind="push" identifier="cellTap" id="EFi-dP-dmW"/>
                                 </connections>
                             </tableViewCell>
                         </prototypes>
@@ -163,4 +165,7 @@
         <simulatedOrientationMetrics key="orientation"/>
         <simulatedScreenMetrics key="destination" type="retina4"/>
     </simulatedMetricsContainer>
+    <inferredMetricsTieBreakers>
+        <segue reference="0rs-s1-fDZ"/>
+    </inferredMetricsTieBreakers>
 </document>
